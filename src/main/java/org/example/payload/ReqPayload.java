@@ -1,12 +1,12 @@
-package org.example.tool_tax_code;
+package org.example.payload;
 
-public class RequestPayload {
+public class ReqPayload {
     private String action;
     private String index;
     private String taxCode;
     private String config_aws;
     private String config_send_email;
-    private String path_file_tax_code;
+    private String path_file_tax_codes;
 
     // Getter và Setter
     public String getAction() {
@@ -49,11 +49,11 @@ public class RequestPayload {
         this.config_send_email = config_send_email;
     }
 
-    public String getPath_file_tax_code() {
-        return path_file_tax_code;
+    public String getPath_file_tax_codes() {
+        return path_file_tax_codes;
     }
 
-    public void setPath_file_tax_code(String path_file_tax_code) {
-        this.path_file_tax_code = path_file_tax_code;
+    public void setPath_file_tax_codes(String path_file_tax_codes) {
+        this.path_file_tax_codes = path_file_tax_codes;
     }
 }

@@ -10,6 +10,7 @@ public class DemoTax {
         String region=args[5];
         String serviceName=args[6];
         String xApiKey=args[7];
+
         TaxIdentityCommon func = new TaxIdentityCommon();
 
         System.out.println("urlLogin: " + urlLogin.equalsIgnoreCase("https://id-dev.mobile-id.vn/dtis/v2/e-identity/general/token/get"));
@@ -29,6 +30,7 @@ public class DemoTax {
         String region1="vn-south-1";
         String serviceName1="dtis-20.10.05";
         String xApiKey1="G91W_4tkizGha1pBmSs6YCws4jABAmRUxgtkHB_q";
+
         String jsonResp = func.loginIdentity(urlLogin1, "GET", basicToken1, timeout1, accessKey1, secretKey1, region1, serviceName1, xApiKey1);
         System.out.println("A: " + jsonResp);
     }

@@ -59,14 +59,12 @@ public class AWSCall {
             awsHeaders.put(AWSV4Constants.X_API_KEY, this.xApiKey);
             awsHeaders.put(AWSV4Constants.CONTENT_TYPE, this.contentType);
 
-            LOG.debug("AWSV4Auth.Builder...START");
             this.builder = new AWSV4Auth.Builder(accessKey, secretKey)
                     .regionName(regionName)
                     .serviceName(serviceName)
                     .httpMethodName(httpMethod)
                     .queryParametes(queryParametes)
                     .awsHeaders(awsHeaders);
-            LOG.debug("AWSV4Auth.Builder...END");
         } catch (Exception e) {
             LOG.debug("Error in AWSCall constructor: " + e.getMessage());
             e.printStackTrace(); // In thông tin chi tiết về lỗi

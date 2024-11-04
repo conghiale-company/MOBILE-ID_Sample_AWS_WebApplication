@@ -24,6 +24,7 @@ public class TaxInfoServlet  extends HttpServlet {
 //            out.println("<h1>Servlet CallTaxInfo at " + request.getContextPath() + "</h1>");
 //            out.println("</body>");
 //            out.println("</html>");
+
             System.out.println("Begin servlet");
             String urlLogin1="https://id-dev.mobile-id.vn/dtis/v2/e-identity/general/token/get";
             String basicToken1="Basic TU9CSUxFLUlEX0RFVjotZGRmTG9obDQ0RTdXREFZbDF6S2JFaTRaampBLVhaZEhvcEJpcE14";

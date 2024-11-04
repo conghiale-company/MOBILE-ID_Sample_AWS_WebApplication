@@ -10,27 +10,6 @@ import java.util.TreeMap;
  * @author Tan_Hung
  */
 public class Function {
-
-//    final private static String URL = "https://id-dev.mobile-id.vn/dtis";
-//
-////    final private static String RELYING_PARTY = "VEIFICATION_SERVICE";
-//    final private static String ACCESS_KEY = "VW7SYCJVTUJZFADIEEE3";
-//    final private static String SECRET_KEY = "Ha2dTIChzVoqnE8EdOatuChPNLyuk1MEFAGqB1W8";
-//    final private static String REGION = "vn-south-1";
-//    final private static String SERVICE_NAME = "dtis-20.10.05";
-//    final private static String XAPI_KEY = "SARLUv9uuzoHdCJNRN1dXT-quzeLMmvMrsaTioPk";
-//
-//    //list function
-//    final private static String FUNCTION_TOKEN = "/v2/e-identity/general/token/get";
-//    final private static String FUNCTION_DN = "/v2/e-identity/utility/info/document/get";
-//    final private static String FUNCTION_REFRESH_DN = "/v2/e-identity/utility/info/document/get";
-//
-//    final private static String HTTP_METHOD_POST = "POST";
-//    final private static String HTTP_METHOD_GET = "GET";
-//    final private static int TIMEOUT = 60000;
-//    final private static String CONTENT_TYPE_APP_JSON = "application/json";
-////    final private static String CONTENT_TYPE_APP_FORM_DATA = "multipart/form-data; boundary=";
-
     private static String URL;
 
     private static String ACCESS_KEY;
@@ -57,9 +36,6 @@ public class Function {
         BASIC_TOKEN = "Basic SVNBUFA6SGEyZFRJQ2h6Vm9xbkU4RWRPYXR1Q2hQTkx5dWsxTUVGQUdxQjFXOA==";
 
         getAwsConfig(path);
-        System.out.println("AAA-getAwsConfig: " + URL+ " - " +FUNCTION_TOKEN+ " - " +BASIC_TOKEN+ " - " +String.valueOf(TIMEOUT)+ " - " +ACCESS_KEY+ " - " +SECRET_KEY+ " - " +REGION+ " - " +SERVICE_NAME+ " - " +XAPI_KEY);
-        String[] args = new String[] {URL+FUNCTION_TOKEN, BASIC_TOKEN, String.valueOf(TIMEOUT), ACCESS_KEY, SECRET_KEY, REGION, SERVICE_NAME, XAPI_KEY};
-        DemoTax.runTaxCode(args);
 //        BASIC_TOKEN = "Basic " + Base64.getEncoder().encodeToString((RELYING_PARTY + ":" + SECRET_KEY).getBytes());
     }
 
@@ -140,11 +116,12 @@ public class Function {
             } else
                 LOG.debug("Configuration parameters loaded successfully");
         }
+//        LOG.info("getAwsConfig: ");
     }
 
     public String login() throws Exception {
         String tokenUrl = URL + FUNCTION_TOKEN;
-        LOG.debug("tokenUrl: " + tokenUrl);
+//        LOG.debug("tokenUrl: " + tokenUrl);
         String payload = null;
         AWSCall awsCall = new AWSCall(
                 tokenUrl, //full path url
@@ -159,8 +136,6 @@ public class Function {
                 null
         );
 
-        LOG.debug("awsCall.bearerToken: " + awsCall.bearerToken);
-
         String jsonResp = HttpUtils.invokeHttpRequest(
                 new URL(tokenUrl),
                 HTTP_METHOD_GET,
@@ -168,7 +143,7 @@ public class Function {
                 awsCall.getAWSV4Auth(payload, BASIC_TOKEN),
                 payload);
 
-        LOG.debug("json resp: " + jsonResp);
+//        LOG.debug("json resp: " + jsonResp);
         return jsonResp;
     }
 

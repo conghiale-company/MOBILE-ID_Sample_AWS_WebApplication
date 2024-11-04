@@ -1,9 +1,12 @@
-package org.example.tool_tax_code;
+package org.example.payload;
 
-public class TaxCodeInfoResp {
-    private boolean running;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
-    private int index = 0;
+public class RespPayload {
+    private boolean isRunning;
+
     private String taxCode;
     private String config_aws;
     private String configSendEmail;
@@ -17,10 +20,11 @@ public class TaxCodeInfoResp {
     private String currentStatus;
     private String message;
 
+    private int index = -1;
     private int numberNotFound = 0;
     private int numberParameterIsInvalid = 0;
     private int numberUnknownException = 0;
-    private int numberDataResponseIsNull = 0;
+    private int numberResponseIsNull = 0;
     private int numberCaptchaInvalid = 0;
     private int numberErrors = 0;
     private int numberSuccessfully = 0;
@@ -28,7 +32,7 @@ public class TaxCodeInfoResp {
     private int previousIndex = -1;
     private int currentIndex = -1;
 
-    public TaxCodeInfoResp() {
+    public RespPayload() {
     }
 
     public String getMessage() {
@@ -40,11 +44,11 @@ public class TaxCodeInfoResp {
     }
 
     public boolean isRunning() {
-        return running;
+        return isRunning;
     }
 
     public void setRunning(boolean running) {
-        this.running = running;
+        this.isRunning = running;
     }
 
     public int getIndex() {
@@ -159,12 +163,12 @@ public class TaxCodeInfoResp {
         this.numberUnknownException = numberUnknownException;
     }
 
-    public int getNumberDataResponseIsNull() {
-        return numberDataResponseIsNull;
+    public int getNumberResponseIsNull() {
+        return numberResponseIsNull;
     }
 
-    public void setNumberDataResponseIsNull(int numberDataResponseIsNull) {
-        this.numberDataResponseIsNull = numberDataResponseIsNull;
+    public void setNumberResponseIsNull(int numberResponseIsNull) {
+        this.numberResponseIsNull = numberResponseIsNull;
     }
 
     public int getNumberCaptchaInvalid() {
@@ -215,10 +219,42 @@ public class TaxCodeInfoResp {
         this.currentIndex = currentIndex;
     }
 
+    public JsonObject toJson() {
+        JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
+
+        // Add all fields to the JSON object
+        jsonBuilder
+                .add("isRunning", isRunning)
+                .add("taxCode", taxCode != null ? taxCode : "")
+                .add("config_aws", config_aws != null ? config_aws : "")
+                .add("configSendEmail", configSendEmail != null ? configSendEmail : "")
+                .add("pathFileTaxCodes", pathFileTaxCodes != null ? pathFileTaxCodes : "")
+                .add("startDay", startDay != null ? startDay : "")
+                .add("endDay", endDay != null ? endDay : "")
+                .add("previousTaxCode", previousTaxCode != null ? previousTaxCode : "")
+                .add("previousStatus", previousStatus != null ? previousStatus : "")
+                .add("currentTaxCode", currentTaxCode != null ? currentTaxCode : "")
+                .add("currentStatus", currentStatus != null ? currentStatus : "")
+                .add("message", message != null ? message : "")
+                .add("index", index)
+                .add("numberNotFound", numberNotFound)
+                .add("numberParameterIsInvalid", numberParameterIsInvalid)
+                .add("numberUnknownException", numberUnknownException)
+                .add("numberResponseIsNull", numberResponseIsNull)
+                .add("numberCaptchaInvalid", numberCaptchaInvalid)
+                .add("numberErrors", numberErrors)
+                .add("numberSuccessfully", numberSuccessfully)
+                .add("numberTaxCode", numberTaxCode)
+                .add("previousIndex", previousIndex)
+                .add("currentIndex", currentIndex);
+
+        return jsonBuilder.build();
+    }
+
     @Override
     public String toString() {
         return "TaxCodeInfoResp{" +
-                "running=" + running +
+                "running=" + isRunning +
                 ", index=" + index +
                 ", taxCode='" + taxCode + '\'' +
                 ", config_aws='" + config_aws + '\'' +
@@ -234,7 +270,7 @@ public class TaxCodeInfoResp {
                 ", numberNotFound=" + numberNotFound +
                 ", numberParameterIsInvalid=" + numberParameterIsInvalid +
                 ", numberUnknownException=" + numberUnknownException +
-                ", numberDataResponseIsNull=" + numberDataResponseIsNull +
+                ", numberDataResponseIsNull=" + numberResponseIsNull +
                 ", numberCaptchaInvalid=" + numberCaptchaInvalid +
                 ", numberErrors=" + numberErrors +
                 ", numberSuccessfully=" + numberSuccessfully +

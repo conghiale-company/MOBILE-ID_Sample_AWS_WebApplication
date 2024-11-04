@@ -1,15 +1,16 @@
 package org.example.tool_tax_code;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
+import org.example.payload.RespPayload;
+import org.example.socket.SocketHandleTaxCode;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -47,9 +48,7 @@ public class Program {
     private static int posStartPage = 0;
     private static int posEndPage = 0;
     private static int lineNumber = 0;
-    private static int previousIndex = -1;
     private static int currentIndex = -1;
-    private static int nextIndex = -1;
 
     private static int sumNumberNotFound = 0;
     private static int sumNumberParameterIsInvalid = 0;
@@ -81,87 +80,89 @@ public class Program {
     private static int index = -1;
     private static String taxCode;
 
-    private static boolean isRunning = false;
     private static boolean isLogin = false;
     private static boolean isSendTaxCodeToServer = true;
     private static JsonNode jsonNode;
     private static Function func;
 
     //    private static List<String> taxCodes;
-    private static TaxCodeInfoResp taxCodeInfoResp;
+    private static RespPayload respPayload;
     private static List<String> taxCodeList;
     private static List<TaxCodeInfo> taxCodeInfoList;
 
-    private static HttpServletRequest req;
-    private static HttpServletResponse resp;
-
-    public static void running(String[] args, HttpServletRequest req, HttpServletResponse resp) throws Exception {//
-        Program.req = req;
-        Program.resp = resp;
-
+    public static void running(String[] args) throws Exception {//
         if (args.length > 1 && args[0] != null && !args[0].isEmpty() && args[1] != null && !args[1].isEmpty()) {
-            PATH_AWS_CONFIG = args[0]; // url of file aws config
-            PATH_SEND_EMAIL_CONFIG = args[1]; // url of file email servẻ config
+            PATH_AWS_CONFIG = args[0];
+            PATH_SEND_EMAIL_CONFIG = args[1];
         } else {
             LOG.debug("Invalid parameter");
             System.exit(0);
         }
 
         func = new Function(PATH_AWS_CONFIG);
-        return;
 
-//        login();
-//
-//        if (isLogin) {
-//            if (args.length > 2 && args[2] != null && !args[2].isEmpty()) {
-//                if (args[2].contains(".txt")) {
-//                    PATH = args[2];
-//
-//                    if (args.length > 3 && args[3] != null && !args[3].isEmpty()) {
-//                        loadData(args[3], false);
-//                    }
-//                    else
-//                        loadData(null, false);
-//                } else {
-//                    if (args[3] != null && !args[3].isEmpty()) {
-//                        if (args[3].contains(".txt")) {
-//                            PATH = args[3];
-//                            loadData(args[2], true);
-//                        } else {
-//                            LOG.debug("The fourth parameter is invalid");
-//                            System.exit(0);
-//                        }
-//                    } else {
-//                        LOG.debug("Invalid parameter");
-//                        System.exit(0);
-//                    }
-//                }
-//            } else {
-//                LOG.debug("Invalid parameter");
-//                System.exit(0);
-//            }
-//        }
+        login();
+
+        if (isLogin) {
+            if (args.length > 2 && args[2] != null && !args[2].isEmpty()) {
+                if (args[2].contains(".txt")) {
+                    PATH = args[2];
+
+                    if (args.length > 3 && args[3] != null && !args[3].isEmpty())
+                        loadData(args[3], false);
+                    else
+                        loadData(null, false);
+                } else {
+                    if (args[3] != null && !args[3].isEmpty()) {
+                        if (args[3].contains(".txt")) {
+                            PATH = args[3];
+                            loadData(args[2], true);
+                        } else {
+                            LOG.debug("The fourth parameter is invalid");
+                            System.exit(0);
+                        }
+                    } else {
+                        LOG.debug("Invalid parameter");
+                        System.exit(0);
+                    }
+                }
+            } else {
+                LOG.debug("Invalid parameter");
+                System.exit(0);
+            }
+        } else {
+            JsonObject jsonResponse = Json.createObjectBuilder()
+                    .add("status", "[ERROR] LOGIN_FAILED")
+                    .add("message", "TOOL HAS LOGIN FAILED")
+                    .add("taxCode", taxCode)
+                    .add("index", index)
+                    .add("PATH_AWS_CONFIG", PATH_AWS_CONFIG)
+                    .add("PATH_SEND_EMAIL_CONFIG", PATH_SEND_EMAIL_CONFIG)
+                    .add("PATH_SEND_EMAIL_CONFIG", PATH_SEND_EMAIL_CONFIG)
+                    .add("startDay", getDayTime())
+                    .add("endDay", "")
+                    .build();
+            SocketHandleTaxCode.sendMessageToAll(jsonResponse.toString());
+            System.exit(0);
+        }
     }
 
     private static void login() throws IOException {
         LOG.debug("Logging...");
         isLogin = false;
-        isRunning = false;
 
         try {
             jsonResp = func.login();
         } catch (Exception e) {
             LOG.debug("Login failed: " + e);
-            System.exit(0);
-//            throw new RuntimeException(e);
+//            System.exit(0);
         }
 
         try {
             jsonNode = objectMapper.readTree(jsonResp);
         } catch (IOException e) {
-            updateTaxCodeInfoResp("", -1, "ERROR: LOGIN FAILED\n" + e);
             LOG.debug("Login failed: " + e);
-            System.exit(0);
+//            System.exit(0);
         }
         accessToken = jsonNode.get("access_token").asText();
         expiresIn = jsonNode.path("expires_in").asInt();
@@ -172,7 +173,6 @@ public class Program {
 
         if (isLogin) {
             LOG.debug("Login successful");
-            isRunning = true;
 
 //            Tao mot ScheduledExecutorService de gui email dinh ky
             ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
@@ -181,7 +181,6 @@ public class Program {
             scheduledExecutorService.scheduleAtFixedRate(Program::sendHeartbeatEmail, 2, 2, TimeUnit.HOURS);
             LOG.debug("Heartbeat monitor started...");
         } else {
-            updateTaxCodeInfoResp("", -1, "ERROR: LOGIN FAILED: TOKEN EXPIRED");
             LOG.debug("Login failed");
         }
     }
@@ -192,98 +191,131 @@ public class Program {
     }
 
     private static void loadData(String param, boolean isMST) throws Exception  {
-        if (param != null && !param.isEmpty()) {
-            if (isMST) {
-                handleLoadData(param);
-                taxCode = param;
-            }
-            else {
-                posStartPage = Integer.parseInt(param);
-                index = posStartPage;
-                System.out.println();
-                LOG.debug("Loading data at index: " + posStartPage);
+        try {
+//        Tạo phản hồi JSON
+            LOG.debug("loadData...");
+            JsonObject jsonResponse = Json.createObjectBuilder()
+                    .add("status", "LOGIN_SUCCESS")
+                    .add("message", "TOOL HAS STARTED")
+                    .add("taxCode", taxCode == null ? "" : taxCode)
+                    .add("index", index)
+                    .add("config_aws", PATH_AWS_CONFIG)
+                    .add("configSendEmail", PATH_SEND_EMAIL_CONFIG)
+                    .add("pathFileTaxCodes", PATH)
+                    .add("startDay", getDayTime())
+                    .build();
+            SocketHandleTaxCode.sendMessageToAll(jsonResponse.toString());
+
+            if (param != null && !param.isEmpty()) {
+                if (isMST) {
+                    handleLoadData(param);
+                    taxCode = param;
+                }
+                else {
+                    posStartPage = Integer.parseInt(param);
+                    index = posStartPage;
+                    System.out.println();
+                    LOG.debug("Loading data at index: " + posStartPage);
+                    handleLoadData(null);
+                }
+            } else
                 handleLoadData(null);
-            }
-        } else
-            handleLoadData(null);
+        } catch (Exception e) {
+            LOG.debug("Loading data failed: " + e);
+        }
     }
 
     private static void handleLoadData(String taxCode) throws Exception {
         if (taxCodeList == null || taxCodeList.isEmpty()) {
             taxCodeInfoList = new ArrayList<>();
             taxCodeList = new ArrayList<>();
-            startDay = getDayTime();
-            LOG.debug("Reading file into ram...");
-            try (BufferedReader br = new BufferedReader(new FileReader(PATH))) {
-                String line;
-                lineNumber = 0;
-                boolean isLoad = false;
+        } else {
+            taxCodeList.clear();
+        }
+        startDay = getDayTime();
+        LOG.debug("Reading file into ram...");
+        try (BufferedReader br = new BufferedReader(new FileReader(PATH))) {
+            String line;
+            lineNumber = 0;
+            boolean isLoad = false;
 
-                if (taxCode != null && !taxCode.isEmpty())
-                    posStartPage = -1;
+            if (taxCode != null && !taxCode.isEmpty())
+                posStartPage = -1;
 
-                while ((line = br.readLine()) != null) {
-                    if (!isLoad) {
-                        if (lineNumber == posStartPage) {
-                            isLoad = true;
-                        }
-
-                        if (taxCode != null && !taxCode.isEmpty() && line.equals(taxCode)) {
-                            updateTaxCodeInfoResp("", -1, "ERROR: NOT FOUND TAX CODES WITH INDEX " + lineNumber);
-                            LOG.debug("Found Tax_Code " + taxCode + " with index " + lineNumber);
-                            posStartPage = lineNumber;
-                            isLoad = true;
-                        }
+            while ((line = br.readLine()) != null) {
+                if (!isLoad) {
+                    if (lineNumber == posStartPage) {
+                        isLoad = true;
                     }
 
-                    if (isLoad)
-                        getTaxCodeToRam(line);
-
-                    lineNumber++;
+                    if (taxCode != null && !taxCode.isEmpty() && line.equals(taxCode)) {
+                        LOG.debug("Found Tax_Code " + taxCode + " with index " + lineNumber);
+                        posStartPage = lineNumber;
+                        isLoad = true;
+                    }
                 }
 
-                if (!taxCodeList.isEmpty()) {
-                    LOG.debug("Loaded " + taxCodeList.size() + " tax code from " + posStartPage);
-                    getInfoDN();
-                }
+                if (isLoad)
+                    getTaxCodeToRam(line);
 
-                if (posStartPage == -1) {
-                    updateTaxCodeInfoResp("", -1, "ERROR: NOT FOUND TAX CODES " + taxCode);
-                    System.out.println();
-                    LOG.debug("Not found tax code: " + taxCode + " with path " + PATH);
-                    System.exit(0);
-                }
+                lineNumber++;
+            }
 
-                updateTaxCodeInfoResp("", -1, "SUCCESS: ALL TAX CODES COMPLETED");
+            if (!taxCodeList.isEmpty()) {
+                LOG.debug("Loaded " + taxCodeList.size() + " tax code from " + posStartPage);
+                getInfoDN();
+            }
+
+            if (posStartPage == -1) {
+                JsonObject fullResponse = Json.createObjectBuilder()
+                        .add("status", "[ERROR] NOT FOUND INDEX OR TAX CODE")
+                        .add("message", "REQUESTED INDEX OR TAX CODE NOT FOUND")
+                        .build();
+                SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
 
                 System.out.println();
-                LOG.debug("successfully got all business information with path " + PATH);
-                endDay = getDayTime();
-                String subject = "ALL TAX CODES COMPLETED";
-                String body = "INFORMATION OF ALL TAX CODES RETRIEVED: \n" +
-                        "\tStart day: " + startDay + "\n" +
-                        "\tEnd day: " + endDay + "\n" +
-                        "\tPath File: " + PATH + "\n" +
-                        "\tNumber of tax codes read: " + sumNumberTaxCode + "\n";
-                sendEmail(subject, body);
+                LOG.debug("Not found tax code: " + taxCode + " with path " + PATH);
                 System.exit(0);
-
-            } catch (IOException e) {
-                updateTaxCodeInfoResp("", -1, "ERROR: TOOL TAX INFO AN ERROR OCCURRED\n" + e);
-                logInfo();
-
-                String formattedDateTime = getDayTime();
-                String subject = "TOOL TAX INFO AN ERROR OCCURRED";
-                String body = "ERROR INFORMATION: \n" +
-                        "\tCode: NULL\n" +
-                        "\tMessage: " + e.getMessage() + "\n" +
-                        "\tDay: " + formattedDateTime + "\n" +
-                        "\tMST: " + currentTaxCode + "\n" +
-                        "\tIndex: " + currentIndex;
-
-                sendEmail(subject, body);
-                stopTool(e, true);
             }
+
+//                updateTaxCodeInfoResp("", -1, "SUCCESS: ALL TAX CODES COMPLETED");
+            JsonObject fullResponse = Json.createObjectBuilder()
+                    .add("status", "[STOP] ALL TAX CODES COMPLETED")
+                    .add("message", "ALL TAX CODES COMPLETED")
+                    .build();
+            SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
+            System.out.println();
+            LOG.debug("successfully got all business information with path " + PATH);
+            endDay = getDayTime();
+            String subject = "ALL TAX CODES COMPLETED";
+            String body = "INFORMATION OF ALL TAX CODES RETRIEVED: \n" +
+                    "\tStart day: " + startDay + "\n" +
+                    "\tEnd day: " + endDay + "\n" +
+                    "\tPath File: " + PATH + "\n" +
+                    "\tNumber of tax codes read: " + sumNumberTaxCode + "\n";
+            sendEmail(subject, body);
+            System.exit(0);
+
+        } catch (IOException e) {
+            JsonObject fullResponse = Json.createObjectBuilder()
+                    .add("status", "[ERROR] TOOL TAX INFO AN ERROR OCCURRED")
+                    .add("message", "TOOL TAX INFO AN ERROR OCCURRED: " + e.getMessage())
+                    .build();
+            SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+            logInfo();
+
+            String formattedDateTime = getDayTime();
+            String subject = "TOOL TAX INFO AN ERROR OCCURRED";
+            String body = "ERROR INFORMATION: \n" +
+                    "\tCode: NULL\n" +
+                    "\tMessage: " + e.getMessage() + "\n" +
+                    "\tDay: " + formattedDateTime + "\n" +
+                    "\tMST: " + currentTaxCode + "\n" +
+                    "\tIndex: " + currentIndex;
+
+            sendEmail(subject, body);
+            stopTool(e, true);
         }
     }
 
@@ -304,14 +336,14 @@ public class Program {
             for (int i = 0; i < taxCodeList.size(); i++) {
                 if (isLogin && Utils.isTokenValid(expiresIn, false)) {
                     handleActionGetDN(i);
-                    updateTaxCodeInfoResp(taxCodeList.get(i), i, "WAITING");
+//                    updateTaxCodeInfoResp(taxCodeList.get(i), i, "WAITING");
                 }
                 else {
                     LOG.debug("The access token has expired");
                     login();
                     if (isLogin) {
                         handleActionGetDN(i);
-                        updateTaxCodeInfoResp(taxCodeList.get(i), i, "WAITING");
+//                        updateTaxCodeInfoResp(taxCodeList.get(i), i, "WAITING");
                     }
                     else
                         LOG.debug("login failed");
@@ -319,6 +351,8 @@ public class Program {
 
                 if (isSendTaxCodeToServer)
                     Utils.wait(PROCESS_TIME_PER_TAXCODE_FIRST);
+
+//                Utils.wait(2000);
             }
         }
     }
@@ -330,6 +364,37 @@ public class Program {
         sumNumberTaxCode++;
         endDay = getDayTime();
 
+//        Begin RespPayload
+        RespPayload payload = new RespPayload();
+        payload.setRunning(true);
+        payload.setIndex(index);
+        payload.setTaxCode((taxCode == null) ? "" : taxCode);
+        payload.setConfig_aws(PATH_AWS_CONFIG);
+        payload.setConfigSendEmail(PATH_SEND_EMAIL_CONFIG);
+        payload.setPathFileTaxCodes(PATH);
+
+        payload.setStartDay(getDayTime());
+        payload.setEndDay("");
+
+        if (!taxCodeInfoList.isEmpty()) {
+            payload.setPreviousTaxCode(taxCodeInfoList.get(taxCodeInfoList.size() - 1).getTaxCode());
+            payload.setPreviousStatus(taxCodeInfoList.get(taxCodeInfoList.size() - 1).getStatus());
+            payload.setPreviousIndex(taxCodeInfoList.get(taxCodeInfoList.size() - 1).getIndex());
+        }
+
+        payload.setCurrentIndex(currentIndex);
+        payload.setCurrentTaxCode(currentTaxCode);
+
+        payload.setNumberNotFound(sumNumberNotFound);
+        payload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
+        payload.setNumberUnknownException(sumNumberUnknownException);
+        payload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
+        payload.setNumberCaptchaInvalid(sumNumberCaptchaInvalid);
+        payload.setNumberErrors(sumNumberErrors);
+        payload.setNumberSuccessfully(sumNumberSuccessfully);
+        payload.setNumberTaxCode(sumNumberTaxCode);
+//        End RespPayload
+
         System.out.println();
         LOG.debug("Retrieving business information with tax code " + currentTaxCode);
 
@@ -340,6 +405,10 @@ public class Program {
             sumNumberErrors++;
             sumNumberParameterIsInvalid++;
             LOG.info("BUG: 4000 - PARAMETER IS INVALID" + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
+
+            payload.setCurrentStatus("INVALID");
+            payload.setNumberErrors(sumNumberErrors);
+            payload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
         }
         else {
             try {
@@ -358,17 +427,22 @@ public class Program {
 
                         if (status == 0 || mess.equals("SUCCESSFULLY")) {
                             sumNumberSuccessfully++;
+                            payload.setCurrentStatus("SUCCESS");
+                            payload.setNumberSuccessfully(sumNumberSuccessfully);
 
-                            updateTaxCodeInfoResp(currentTaxCode, i, "SUCCESS");
-                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "SUCCESS"));
+//                            updateTaxCodeInfoResp(currentTaxCode, i, "SUCCESS");
+                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, currentIndex, "SUCCESS"));
 
                             LOG.info("INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                         } else if (status == 4044 || mess.contains("BUSINESS INFORMATION NOT FOUND")) {
                             sumNumberErrors++;
                             sumNumberNotFound++;
+                            payload.setCurrentStatus("NOT FOUND");
+                            payload.setNumberErrors(sumNumberErrors);
+                            payload.setNumberNotFound(sumNumberNotFound);
 
-                            updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: NOT FOUND");
-                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "ERROR: NOT FOUND"));
+//                            updateTaxCodeInfoResp(currentTaxCode, i, "NOT FOUND");
+                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, currentIndex, "NOT FOUND"));
 
                             LOG.info("BUG: " + status + " - " + mess + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                         } else if (status == 4001 || mess.contains("UNKNOWN EXCEPTION") || status == 4045 || mess.contains("ERROR CONNECTING TO ENTITY, PLEASE TRY AGAIN LATER")) {
@@ -391,9 +465,10 @@ public class Program {
 
                                         if (status == 0 || mess.contains("SUCCESSFULLY")) {
                                             sumNumberSuccessfully++;
+                                            payload.setCurrentStatus("SUCCESS");
+                                            payload.setNumberSuccessfully(sumNumberSuccessfully);
 
-                                            updateTaxCodeInfoResp(currentTaxCode, i, "SUCCESS");
-                                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "SUCCESS"));
+                                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, currentIndex, "SUCCESS"));
 
                                             LOG.info("INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                                             isErrorUnknownException = false;
@@ -401,9 +476,11 @@ public class Program {
                                         } else if (status == 4044 && mess.contains("BUSINESS INFORMATION NOT FOUND")) {
                                             sumNumberErrors++;
                                             sumNumberNotFound++;
+                                            payload.setCurrentStatus("NOT FOUND");
+                                            payload.setNumberErrors(sumNumberErrors);
+                                            payload.setNumberNotFound(sumNumberNotFound);
 
-                                            updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: NOT FOUND");
-                                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "ERROR: NOT FOUND"));
+                                            taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, currentIndex, "NOT FOUND"));
 
                                             LOG.info("BUG: " + status + " - " + mess + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                                             isErrorUnknownException = false;
@@ -411,10 +488,17 @@ public class Program {
                                         }
                                     }
                                 } catch (Exception e) {
+                                    payload.setRunning(false);
+                                    JsonObject fullResponse = Json.createObjectBuilder()
+                                            .add("status", "[ERROR] Exception")
+                                            .add("message", e.getMessage())
+                                            .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                                            .build();
+                                    SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
                                     logInfo();
 
-                                    isRunning = false;
-                                    updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
+//                                    updateTaxCodeInfoResp(currentTaxCode, currentIndex, "ERROR: " + e);
 
                                     formattedDateTime = getDayTime();
                                     String subject = "TOOL TAX INFO AN ERROR OCCURRED";
@@ -432,18 +516,26 @@ public class Program {
 
                             if (isErrorUnknownException) {
                                 sumNumberErrors++;
-                                isRunning = false;
                                 if (status == 4001) {
                                     sumNumberUnknownException++;
+                                    payload.setCurrentStatus("UNKNOWN EXCEPTION");
+                                    payload.setNumberUnknownException(sumNumberUnknownException);
 
-                                    updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: UNKNOWN EXCEPTION");
-                                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "ERROR: UNKNOWN EXCEPTION"));
+                                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "UNKNOWN EXCEPTION"));
                                 } else if (status == 4045) {
                                     sumNumberCaptchaInvalid++;
+                                    payload.setCurrentStatus("CAPTCHA INVALID");
+                                    payload.setNumberCaptchaInvalid(sumNumberCaptchaInvalid);
 
-                                    updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: CAPTCHA INVALID");
-                                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "ERROR: CAPTCHA INVALID"));
+                                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "CAPTCHA INVALID"));
                                 }
+
+                                payload.setRunning(false);
+                                JsonObject fullResponse = Json.createObjectBuilder()
+//                                            .add("status", "LOGIN_SUCCESS")
+                                        .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                                        .build();
+                                SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
 
                                 LOG.debug("BUG: " + status + " - " + mess + " -- TAX CODE = " + currentTaxCode + " -- INDEX = " + currentIndex + " -- [RETRIED 3 TIMES]");
                                 LOG.info("BUG: " + status + " - " + mess + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
@@ -464,10 +556,17 @@ public class Program {
                             }
                         }
                     } catch (Exception e) {
+                        payload.setRunning(false);
+                        JsonObject fullResponse = Json.createObjectBuilder()
+                                .add("status", "[ERROR] Exception")
+                                .add("message", e.getMessage())
+                                .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                                .build();
+                        SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
                         logInfo();
 
-                        isRunning = false;
-                        updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
+//                        updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
 
                         formattedDateTime = getDayTime();
                         String subject = "TOOL TAX INFO AN ERROR OCCURRED";
@@ -485,9 +584,19 @@ public class Program {
                     sumNumberErrors++;
                     sumNumberDataResponseIsNull++;
 
-                    isRunning = false;
-                    updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: DATA RESPONSE IS NULL");
-                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "ERROR: DATA RESPONSE IS NULL"));
+                    payload.setRunning(false);
+                    payload.setCurrentStatus("DATA RESPONSE IS NULL");
+                    payload.setNumberErrors(sumNumberErrors);
+                    payload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
+
+                    JsonObject fullResponse = Json.createObjectBuilder()
+                            .add("status", "Exception")
+                            .add("message", "DATA RESPONSE IS NULL")
+                            .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                            .build();
+                    SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
+                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "DATA RESPONSE IS NULL"));
 
                     LOG.info("BUG: DATA RESPONSE IS NULL" + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                     logInfo();
@@ -505,10 +614,17 @@ public class Program {
                     stopTool(null, true);
                 }
             } catch (Exception e) {
+                payload.setRunning(false);
+                JsonObject fullResponse = Json.createObjectBuilder()
+                        .add("status", "[ERROR] Exception")
+                        .add("message", e.getMessage())
+                        .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                        .build();
+                SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
                 logInfo();
 
-                isRunning = false;
-                updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
+//                updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
 
                 formattedDateTime = getDayTime();
                 String subject = "TOOL TAX INFO AN ERROR OCCURRED";
@@ -524,6 +640,22 @@ public class Program {
             }
         }
 
+//        payload.setNumberTaxCode(sumNumberTaxCode);
+//        payload.setNumberSuccessfully(sumNumberSuccessfully);
+//        payload.setNumberErrors(sumNumberErrors);
+//        payload.setNumberUnknownException(sumNumberUnknownException);
+//        payload.setNumberCaptchaInvalid(sumNumberCaptchaInvalid);
+//        payload.setNumberNotFound(sumNumberNotFound);
+//        payload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
+//        payload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
+
+        payload.setMessage("DONE INFORMATION OF A TAX CODE: " + currentTaxCode);
+        JsonObject fullResponse = Json.createObjectBuilder()
+//                .add("status", "[ERROR] Exception")
+                .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                .build();
+        SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
+
         logInfo();
 
         if (i == (taxCodeList.size() - 1)) {
@@ -533,46 +665,40 @@ public class Program {
 
     private static void updateTaxCodeInfoResp(String currentTaxCode, int currentIndex, String currentStatus) throws IOException {
         endDay = getDayTime();
-        taxCodeInfoResp = new TaxCodeInfoResp();
-        taxCodeInfoResp.setStartDay(startDay);
-        taxCodeInfoResp.setEndDay(endDay);
+        respPayload = new RespPayload();
+        respPayload.setStartDay(startDay);
+        respPayload.setEndDay(endDay);
 
-        taxCodeInfoResp.setRunning(isRunning);
-        taxCodeInfoResp.setIndex(index);
-        taxCodeInfoResp.setTaxCode(taxCode);
-        taxCodeInfoResp.setConfig_aws(PATH_AWS_CONFIG);
-        taxCodeInfoResp.setConfigSendEmail(PATH_SEND_EMAIL_CONFIG);
-        taxCodeInfoResp.setPathFileTaxCodes(PATH);
+        respPayload.setIndex(index);
+        respPayload.setTaxCode(taxCode);
+        respPayload.setConfig_aws(PATH_AWS_CONFIG);
+        respPayload.setConfigSendEmail(PATH_SEND_EMAIL_CONFIG);
+        respPayload.setPathFileTaxCodes(PATH);
 
         int size = taxCodeInfoList.size();
         if (size > 0) {
-            taxCodeInfoResp.setPreviousTaxCode(taxCodeInfoList.get(size - 1).getTaxCode());
-            taxCodeInfoResp.setPreviousStatus(taxCodeInfoList.get(size - 1).getStatus());
-            taxCodeInfoResp.setPreviousIndex(taxCodeInfoList.get(size - 1).getIndex());
+            respPayload.setPreviousTaxCode(taxCodeInfoList.get(size - 1).getTaxCode());
+            respPayload.setPreviousStatus(taxCodeInfoList.get(size - 1).getStatus());
+            respPayload.setPreviousIndex(taxCodeInfoList.get(size - 1).getIndex());
         }
 
-        taxCodeInfoResp.setCurrentTaxCode(currentTaxCode);
-        taxCodeInfoResp.setCurrentStatus(currentStatus);
-        taxCodeInfoResp.setCurrentIndex(currentIndex);
+        respPayload.setCurrentTaxCode(currentTaxCode);
+        respPayload.setCurrentStatus(currentStatus);
+        respPayload.setCurrentIndex(currentIndex);
 
-        taxCodeInfoResp.setNumberTaxCode(sumNumberTaxCode);
-        taxCodeInfoResp.setNumberSuccessfully(sumNumberSuccessfully);
-        taxCodeInfoResp.setNumberErrors(sumNumberErrors);
-        taxCodeInfoResp.setNumberUnknownException(sumNumberUnknownException);
-        taxCodeInfoResp.setNumberCaptchaInvalid(sumNumberCaptchaInvalid);
-        taxCodeInfoResp.setNumberNotFound(sumNumberNotFound);
-        taxCodeInfoResp.setNumberDataResponseIsNull(sumNumberDataResponseIsNull);
-        taxCodeInfoResp.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
+        respPayload.setNumberTaxCode(sumNumberTaxCode);
+        respPayload.setNumberSuccessfully(sumNumberSuccessfully);
+        respPayload.setNumberErrors(sumNumberErrors);
+        respPayload.setNumberUnknownException(sumNumberUnknownException);
+        respPayload.setNumberCaptchaInvalid(sumNumberCaptchaInvalid);
+        respPayload.setNumberNotFound(sumNumberNotFound);
+        respPayload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
+        respPayload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonResponse = objectMapper.writeValueAsString(taxCodeInfoResp);
+        String jsonResponse = objectMapper.writeValueAsString(respPayload);
 
-        if (resp != null) {
-            // Đặt kiểu dữ liệu trả về là JSON
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
-            resp.getWriter().write(jsonResponse);
-        }
+//        send to client
     }
 
     private static void logInfo() {

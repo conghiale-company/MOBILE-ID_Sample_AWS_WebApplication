@@ -1,230 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <title>Index</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <title>Index</title>
 </head>
 <body>
-  <div class="my_container">
-    <div class="title">TOOL TAX CODE</div>
-    <div class="container__body">
-      <div class="wrap__content__one">
-        <div >
-          <label class="text__bold" for="startDay">Start Day:</label>
-          <input type="text" id="startDay" name="startDay" readonly>
-        </div>
-
-        <div class="status__tool">
-          <b type="text" id="statusTool" name="statusTool">RUNNING</b>
-        </div>
-
-        <div>
-          <label class="text__bold" for="endDay">End Day:</label>
-          <input type="text" id="endDay" name="endDay" readonly>
-        </div>
+<div class="my_container">
+  <div class="title">TOOL TAX CODE</div>
+  <div class="container__body">
+    <div class="wrap__content__one">
+      <div >
+        <label class="text__bold" for="startDay">Start Day:</label>
+        <input type="text" id="startDay" name="startDay" readonly>
       </div>
 
-      <b class="sub__title">Infomation Tax Code</b>
+      <div class="status__tool">
+        <b type="text" id="statusTool" name="statusTool">RUNNING</b>
+      </div>
 
-      <table class="table__info__tax__code">
-        <tr>
-          <th></th>
-          <th>
-            <div class="wrap__content__title__item">
-              <b>Index</b>
-            </div>
-          </th>
-          <th>
-            <div class="wrap__content__title__item">
-              <b>Tax Code</b>
-            </div>
-          </th>
-          <th>
-            <div class="wrap__content__title__item">
-              <b>Status</b>
-            </div>
-          </th>
-        </tr>
-        <tr>
-          <td style="width: 10%;">
-            <b>Previous</b>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              281002
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              1234567890-002
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="status__taxcode">Success</b>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td style="width: 10%;">
-            <b>Current</b>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              281002
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              1234567890-002
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="status__taxcode">Success</b>
-            </div>
-          </td>
-        </tr>
-      </table>
-
-      <b class="sub__title">Infomation Tool</b>
-
-      <table class="table__info__tool">
-        <tr>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Tax Code</b>
-              <div class="width150" id="numberTaxCode"></div>
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Successfully</b>
-              <div class="width150" id="numberSuccessfully"></div>
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Error</b>
-              <div class="width150" id="numberError"></div>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Captcha Invalid</b>
-              <div class="width150" id="numberCaptchaInvalid"></div>
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Not Found</b>
-              <div class="width150" id="numberNotFound"></div>
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Data Unknown Exception</b>
-              <div class="width150" id="numberDataUnknownException"></div>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Parameter Is Valid</b>
-              <div class="width150" id="numberParameterIsValid"></div>
-            </div>
-          </td>
-          <td>
-            <div class="wrap__content__title__item">
-              <b class="width255">Number Data Response Is Null</b>
-              <div class="width150" id="numberDataResponseIsNull"></div>
-            </div>
-          </td>
-          <td>
-          </td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="wrap__button__action">
-      <button class="my_btn" id="btnStop">Stop</button>
-      <button class="my_btn" id="btnStart" data-bs-toggle="modal" data-bs-target="#modalStartTool">Start</button>
-    </div>
-  </div>
-
-  <!-- Modal modalStartTool -->
-  <div class="modal fade" id="modalStartTool" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title" id="staticBackdropLabel">Information Tool Start</h3>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input placeholder="Index" type="text" class="infoStartTool" id="index" value="">
-          <input placeholder="Tax Code" type="text" class="infoStartTool" id="taxCode" value="">
-          <input placeholder="Config aws" type="text" class="infoStartTool" id="config_aws" value="">
-          <input placeholder="Config send email" type="text" class="infoStartTool" id="config_send_email" value="">
-          <input placeholder="Path file tax codes" type="text" class="infoStartTool" id="path_file_tax_codes" value="">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-success" id="btnModalStartTool">Start</button>
-        </div>
+      <div>
+        <label class="text__bold" for="endDay">End Day:</label>
+        <input type="text" id="endDay" name="endDay" readonly>
       </div>
     </div>
+
+    <b class="sub__title">Infomation Tax Code</b>
+
+    <table class="table__info__tax__code">
+      <tr>
+        <th></th>
+        <th>
+          <div class="wrap__content__title__item">
+            <b>Index</b>
+          </div>
+        </th>
+        <th>
+          <div class="wrap__content__title__item">
+            <b>Tax Code</b>
+          </div>
+        </th>
+        <th>
+          <div class="wrap__content__title__item">
+            <b>Status</b>
+          </div>
+        </th>
+      </tr>
+      <tr>
+        <td style="width: 10%;">
+          <b>Previous</b>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <p id="previousIndex">28102002</p>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <p id="previousTaxCode">1234567890-002</p>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="status__taxcode" id="previousStatus">NOT FOUND</b>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width: 10%;">
+          <b>Current</b>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <p id="currentIndex">28102002</p>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <p id="currentTaxCode">1234567890-002</p>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="status__taxcode" id="currentStatus">Success</b>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <b class="sub__title">Infomation Tool</b>
+
+    <table class="table__info__tool">
+      <tr>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Tax Code</b>
+            <div class="width150" id="numberTaxCode"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Successfully</b>
+            <div class="width150" id="numberSuccessfully"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Error</b>
+            <div class="width150" id="numberErrors"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Captcha Invalid</b>
+            <div class="width150" id="numberCaptchaInvalid"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Not Found</b>
+            <div class="width150" id="numberNotFound"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Data Unknown Exception</b>
+            <div class="width150" id="numberUnknownException"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Parameter Is Valid</b>
+            <div class="width150" id="numberParameterIsInvalid"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__content__title__item">
+            <b class="width255">Number Data Response Is Null</b>
+            <div class="width150" id="numberResponseIsNull"></div>
+          </div>
+        </td>
+        <td>
+          <div class="wrap__button__action">
+            <button class="my_btn" id="btnStop">Stop</button>
+            <button class="my_btn" id="btnStart" data-bs-toggle="modal" data-bs-target="#modalStartTool">Start</button>
+          </div>
+        </td>
+      </tr>
+    </table>
   </div>
 
-  <!-- Modal ERROR -->
-  <div class="modal fade" id="modalError" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title" id="modalErrorLabel" style="color: #DF3838;">ERROR DETAIL</h3>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p id="modal-body-error">...</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+
+</div>
+
+<!-- Modal modalStartTool -->
+<div class="modal fade" id="modalStartTool" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="staticBackdropLabel">Information Tool Start</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input placeholder="Index" type="text" class="infoStartTool" id="index" value="">
+        <input placeholder="Tax Code" type="text" class="infoStartTool" id="taxCode" value="">
+        <input placeholder="Config aws" type="text" class="infoStartTool" id="config_aws" value="">
+        <input placeholder="Config send email" type="text" class="infoStartTool" id="config_send_email" value="">
+        <input placeholder="Path file tax codes" type="text" class="infoStartTool" id="path_file_tax_codes" value="">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="btnModalStartTool">Start</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Modal SUCCESS -->
-  <div class="modal fade" id="modalSuccess" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title" id="modalSuccessLabel" style="color: #25A31A;">ERROR DETAIL</h3>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p id="modal-body-success">...</p>...
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+<!-- Modal ERROR -->
+<div class="modal fade" id="modalError" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalErrorLabel" style="color: #DF3838;">ERROR DETAIL</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-body-error">...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
-          integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
-          integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+<!-- Modal SUCCESS -->
+<div class="modal fade" id="modalSuccess" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalSuccessLabel" style="color: #25A31A;">ERROR DETAIL</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-body-success">...</p>...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <link href="css/index.css" rel="stylesheet" type="text/css">
-  <script src="js/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
+<link href="css/index.css" rel="stylesheet" type="text/css">
+<script src="js/index.js"></script>
 </body>
 </html>

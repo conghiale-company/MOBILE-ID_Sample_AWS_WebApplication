@@ -18,18 +18,21 @@ import java.util.function.Consumer;
 public class SocketHandleTaxCode {
     private static final Logger LOG = Logger.getLogger(SocketHandleTaxCode.class);
     private static final ConcurrentHashMap<String, Session> clients = new ConcurrentHashMap<>();
+    private static String lastMessage = "";
 
     @OnOpen
     public void onOpen(Session session) {
         LOG.debug("[OPEN] Client connected: " + session.getId());
         clients.put(session.getId(), session);
+        if (lastMessage != null && !lastMessage.isEmpty())
+            sendMessageToClient(session.getId(), lastMessage);
     }
 
     @OnMessage
     public void onMessage(String message, Session session) throws IOException {
         LOG.debug("[MESSAGE] Message received from client: " + message);
 
-//        Chuyen message ve dang json => lay thong tin duoc gui len
+//        Chuyen message ve da  ng json => lay thong tin duoc gui len
         JsonReader jsonReader = Json.createReader(new StringReader(message));
         JsonObject jsonObject = jsonReader.readObject();
 
@@ -90,6 +93,7 @@ public class SocketHandleTaxCode {
             LOG.debug("[SEND TO ALL] Client ID:" + session.getId());
             try {
                 session.getBasicRemote().sendText(message);
+                lastMessage = message;
                 LOG.debug("[SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + session.getId() + ": " + message);
             } catch (IOException e) {
                 LOG.debug("[ERROR] [SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + session.getId() + ": " + e);
@@ -104,6 +108,7 @@ public class SocketHandleTaxCode {
         if (session != null) {
             try {
                 session.getBasicRemote().sendText(message);
+                lastMessage = message;
                 LOG.debug("[SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + sessionId + ": " + message);
             } catch (IOException e) {
                 LOG.debug("[ERROR] [SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + sessionId + ": " + e.getMessage());

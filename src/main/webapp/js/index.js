@@ -8,7 +8,7 @@ let modal_body_error = document.getElementById('modal-body-error');
 let modal_Error = new bootstrap.Modal(document.getElementById('modalError'));
 let modal_Start_Tool = new bootstrap.Modal(document.getElementById('modalStartTool'))
 
-let isStatus = false
+let isStatus = true
 
 // bien luu tru gia tri server phan hoi [START]
 let state = {
@@ -80,8 +80,10 @@ if (isStatus === true) {
 }
 
 
-// Kết nối tới WebSocket
-const socket = new WebSocket(`ws://${window.location.hostname}:8080/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+// Kết nối tới WebSocket\
+// console.log("window.location.hostname: " + window.location.hostname)
+const socket = new WebSocket(`wss://${window.location.hostname}:443/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+// const socket = new WebSocket(`ws://${window.location.hostname}:8080/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
 
 // onMessage
 // - Ham nay duoc goi khi client nhan duoc tin nhan tu server
@@ -539,6 +541,8 @@ function updateUI_StatusTool(status) {
 }
 
 function updateUI_isRunning(_isRunning) {
+    // console.log("isStatus: " + isStatus)
+    // console.log("_isRunning: " + _isRunning)
     if (isStatus === true) {
         if (_isRunning === true) {
             status__tool.style.border = "2px dashed #25A31A"
@@ -617,6 +621,8 @@ function updateUI_CurrentStatus(_currentStatus) {
 
     if (_currentStatus === "SUCCESS") {
         document.getElementById("currentStatus").style.backgroundColor = "#25A31A"
+    } else if (_currentStatus === "PROCESSING..."){
+        document.getElementById("currentStatus").style.backgroundColor = "#feca57"
     } else {
         document.getElementById("currentStatus").style.backgroundColor = "#DF3838"
     }

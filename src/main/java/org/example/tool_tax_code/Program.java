@@ -89,6 +89,7 @@ public class Program {
     private static RespPayload respPayload;
     private static List<String> taxCodeList;
     private static List<TaxCodeInfo> taxCodeInfoList;
+    private  static RespPayload payload;
 
     public static void running(String[] args) throws Exception {//
         if (args.length > 1 && args[0] != null && !args[0].isEmpty() && args[1] != null && !args[1].isEmpty()) {
@@ -104,6 +105,7 @@ public class Program {
         login();
 
         if (isLogin) {
+            startDay = getDayTime();
             if (args.length > 2 && args[2] != null && !args[2].isEmpty()) {
                 if (args[2].contains(".txt")) {
                     PATH = args[2];
@@ -202,7 +204,7 @@ public class Program {
                     .add("config_aws", PATH_AWS_CONFIG)
                     .add("configSendEmail", PATH_SEND_EMAIL_CONFIG)
                     .add("pathFileTaxCodes", PATH)
-                    .add("startDay", getDayTime())
+                    .add("startDay", startDay)
                     .build();
             SocketHandleTaxCode.sendMessageToAll(jsonResponse.toString());
 
@@ -225,14 +227,15 @@ public class Program {
         }
     }
 
-    private static void handleLoadData(String taxCode) throws Exception {
+    private static void handleLoadData(String taxCode) throws Exception
+    {
         if (taxCodeList == null || taxCodeList.isEmpty()) {
             taxCodeInfoList = new ArrayList<>();
             taxCodeList = new ArrayList<>();
         } else {
             taxCodeList.clear();
         }
-        startDay = getDayTime();
+
         LOG.debug("Reading file into ram...");
         try (BufferedReader br = new BufferedReader(new FileReader(PATH))) {
             String line;
@@ -352,7 +355,7 @@ public class Program {
                 if (isSendTaxCodeToServer)
                     Utils.wait(PROCESS_TIME_PER_TAXCODE_FIRST);
 
-//                Utils.wait(2000);
+                Utils.wait(2000);
             }
         }
     }
@@ -365,7 +368,7 @@ public class Program {
         endDay = getDayTime();
 
 //        Begin RespPayload
-        RespPayload payload = new RespPayload();
+        payload = new RespPayload();
         payload.setRunning(true);
         payload.setIndex(index);
         payload.setTaxCode((taxCode == null) ? "" : taxCode);
@@ -373,7 +376,7 @@ public class Program {
         payload.setConfigSendEmail(PATH_SEND_EMAIL_CONFIG);
         payload.setPathFileTaxCodes(PATH);
 
-        payload.setStartDay(getDayTime());
+        payload.setStartDay(startDay);
         payload.setEndDay("");
 
         if (!taxCodeInfoList.isEmpty()) {
@@ -384,6 +387,7 @@ public class Program {
 
         payload.setCurrentIndex(currentIndex);
         payload.setCurrentTaxCode(currentTaxCode);
+        payload.setCurrentStatus("PROCESSING...");
 
         payload.setNumberNotFound(sumNumberNotFound);
         payload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
@@ -397,6 +401,12 @@ public class Program {
 
         System.out.println();
         LOG.debug("Retrieving business information with tax code " + currentTaxCode);
+
+        JsonObject fullResponse = Json.createObjectBuilder()
+//                .add("status", "[ERROR] Exception")
+                .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                .build();
+        SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
 
         jsonResp = null;
 
@@ -488,15 +498,15 @@ public class Program {
                                         }
                                     }
                                 } catch (Exception e) {
+                                    logInfo();
+
                                     payload.setRunning(false);
-                                    JsonObject fullResponse = Json.createObjectBuilder()
+                                    fullResponse = Json.createObjectBuilder()
                                             .add("status", "[ERROR] Exception")
                                             .add("message", e.getMessage())
                                             .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
                                             .build();
                                     SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
-                                    logInfo();
 
 //                                    updateTaxCodeInfoResp(currentTaxCode, currentIndex, "ERROR: " + e);
 
@@ -530,17 +540,17 @@ public class Program {
                                     taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "CAPTCHA INVALID"));
                                 }
 
-                                payload.setRunning(false);
-                                JsonObject fullResponse = Json.createObjectBuilder()
-//                                            .add("status", "LOGIN_SUCCESS")
-                                        .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
-                                        .build();
-                                SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
                                 LOG.debug("BUG: " + status + " - " + mess + " -- TAX CODE = " + currentTaxCode + " -- INDEX = " + currentIndex + " -- [RETRIED 3 TIMES]");
                                 LOG.info("BUG: " + status + " - " + mess + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
                                 LOG.warn(currentTaxCode);
                                 logInfo();
+
+                                payload.setRunning(false);
+                                fullResponse = Json.createObjectBuilder()
+//                                            .add("status", "LOGIN_SUCCESS")
+                                        .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
+                                        .build();
+                                SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
 
                                 formattedDateTime = getDayTime();
                                 String subject = "TOOL TAX INFO AN " + mess + " HAS OCCURRED";
@@ -556,15 +566,15 @@ public class Program {
                             }
                         }
                     } catch (Exception e) {
+                        logInfo();
+
                         payload.setRunning(false);
-                        JsonObject fullResponse = Json.createObjectBuilder()
+                        fullResponse = Json.createObjectBuilder()
                                 .add("status", "[ERROR] Exception")
                                 .add("message", e.getMessage())
                                 .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
                                 .build();
                         SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
-                        logInfo();
 
 //                        updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
 
@@ -589,17 +599,17 @@ public class Program {
                     payload.setNumberErrors(sumNumberErrors);
                     payload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
 
-                    JsonObject fullResponse = Json.createObjectBuilder()
+                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "DATA RESPONSE IS NULL"));
+
+                    LOG.info("BUG: DATA RESPONSE IS NULL" + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
+                    logInfo();
+
+                    fullResponse = Json.createObjectBuilder()
                             .add("status", "Exception")
                             .add("message", "DATA RESPONSE IS NULL")
                             .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
                             .build();
                     SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
-                    taxCodeInfoList.add(new TaxCodeInfo(currentTaxCode, i, "DATA RESPONSE IS NULL"));
-
-                    LOG.info("BUG: DATA RESPONSE IS NULL" + " -- INDEX = " + currentIndex + " -- MST = " + currentTaxCode);
-                    logInfo();
 
                     formattedDateTime = getDayTime();
                     String subject = "TOOL TAX INFO AN REQUEST TIME OUT HAS OCCURRED";
@@ -614,15 +624,15 @@ public class Program {
                     stopTool(null, true);
                 }
             } catch (Exception e) {
+                logInfo();
+
                 payload.setRunning(false);
-                JsonObject fullResponse = Json.createObjectBuilder()
+                fullResponse = Json.createObjectBuilder()
                         .add("status", "[ERROR] Exception")
                         .add("message", e.getMessage())
                         .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
                         .build();
                 SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
-                logInfo();
 
 //                updateTaxCodeInfoResp(currentTaxCode, i, "ERROR: " + e);
 
@@ -649,14 +659,14 @@ public class Program {
 //        payload.setNumberResponseIsNull(sumNumberDataResponseIsNull);
 //        payload.setNumberParameterIsInvalid(sumNumberParameterIsInvalid);
 
+        logInfo();
+
         payload.setMessage("DONE INFORMATION OF A TAX CODE: " + currentTaxCode);
-        JsonObject fullResponse = Json.createObjectBuilder()
+        fullResponse = Json.createObjectBuilder()
 //                .add("status", "[ERROR] Exception")
                 .add("RespPayload", payload.toJson()) // Adding the payload JSON as a nested object
                 .build();
         SocketHandleTaxCode.sendMessageToAll(fullResponse.toString());
-
-        logInfo();
 
         if (i == (taxCodeList.size() - 1)) {
             posStartPage = currentIndex + 1;
@@ -702,7 +712,7 @@ public class Program {
     }
 
     private static void logInfo() {
-        System.out.println();
+//        System.out.println();
         endDay = getDayTime();
         LOG.debug("startDay: " + startDay);
         LOG.debug("endDay: " + endDay);
@@ -825,7 +835,7 @@ public class Program {
                     TO_EMAIL == null || TO_EMAIL.isEmpty() || SMTP_HOST == null || SMTP_HOST.isEmpty() ||
                     TLS_PORT == null || TLS_PORT.isEmpty() || ENABLE_AUTHENTICATION == null || ENABLE_AUTHENTICATION.isEmpty() ||
                     ENABLE_STARTTLS == null || ENABLE_STARTTLS.isEmpty()) {
-                LOG.error("Invalid configuration parameter");
+                LOG.debug("Invalid configuration parameter");
                 System.exit(0);
             } else
                 LOG.debug("Configuration send Email parameters loaded successfully");

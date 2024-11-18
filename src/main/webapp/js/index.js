@@ -82,8 +82,29 @@ if (isStatus === true) {
 
 // Kết nối tới WebSocket\
 // console.log("window.location.hostname: " + window.location.hostname)
-const socket = new WebSocket(`wss://${window.location.hostname}:443/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+// const socket = new WebSocket(`wss://${window.location.hostname}:443/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
 // const socket = new WebSocket(`ws://${window.location.hostname}:8080/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+let socket;
+if (window.location.hostname === "localhost") {
+    socket = new WebSocket(`ws://${window.location.hostname}:8080/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+} else {
+    socket = new WebSocket(`wss://${window.location.hostname}:443/Sample_AWS_WebApplication-1.0-SNAPSHOT/socket-handle-tax-code`);
+}
+
+
+if (window.location.hostname === "taxclient01.mobile-id.vn") {
+    stateProxy._config_aws = "/root/tax-info-client-data/config_aws_dev.cfg"
+    stateProxy._configSendEmail = "/root/tax-info-client-data/config_send_email.cfg"
+    stateProxy._pathFileTaxCodes = "/root/tax-info-client-data/Tax_Code_500k.txt"
+} else if (window.location.hostname === "taxclient02.mobile-id.vn") {
+    stateProxy._config_aws = "/root/tax-info-client-data/config_aws_isapp.cfg"
+    stateProxy._configSendEmail = "/root/tax-info-client-data/config_send_email.cfg"
+    stateProxy._pathFileTaxCodes = "/root/tax-info-client-data/Tax_Code_499k.txt"
+} else if (window.location.hostname === "localhost") {
+    stateProxy._config_aws = "D:\\Data\\MOBILE_ID\\DTIS-V2-Utility\\Test_Tool_AWS\\config_aws_dev.cfg"
+    stateProxy._configSendEmail = "D:\\Data\\MOBILE_ID\\DTIS-V2-Utility\\Test_Tool_AWS\\config_send_email.cfg"
+    stateProxy._pathFileTaxCodes = "D:\\Data\\MOBILE_ID\\DTIS-V2-Utility\\Test_Tool_AWS\\Tax_Code_Test.txt"
+}
 
 // onMessage
 // - Ham nay duoc goi khi client nhan duoc tin nhan tu server
@@ -622,7 +643,7 @@ function updateUI_CurrentStatus(_currentStatus) {
     if (_currentStatus === "SUCCESS") {
         document.getElementById("currentStatus").style.backgroundColor = "#25A31A"
     } else if (_currentStatus === "PROCESSING..."){
-        document.getElementById("currentStatus").style.backgroundColor = "#feca57"
+        document.getElementById("currentStatus").style.backgroundColor = "#0abde3"
     } else {
         document.getElementById("currentStatus").style.backgroundColor = "#DF3838"
     }

@@ -12,16 +12,26 @@ import java.util.concurrent.Future;
 
 public class ToolManager {
     private static final Logger LOG = Logger.getLogger(ToolManager.class);
-    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static ExecutorService executorService = null;
     private static Future<?> informationRetrievalTask;
     public static volatile boolean isRunning = false;
 
+    public static Program program = null;
+
     public static void startTool(String[] args) {
+        LOG.debug("Starting tool...");
         if (!isRunning) {
             isRunning = true;
+
+            // Reinitialize executorService if it was shut down
+            if (executorService == null || executorService.isShutdown()) {
+                executorService = Executors.newSingleThreadExecutor();
+            }
+
             informationRetrievalTask = executorService.submit(() -> {
                 try {
-                    Program.running(args);
+                    program = new Program();
+                    program.running(args);
                 } catch (Exception e) {
                     Thread.currentThread().interrupt();
                 }
@@ -31,8 +41,8 @@ public class ToolManager {
 
     public static void stopTool() {
         if (informationRetrievalTask != null) {
-            informationRetrievalTask.cancel(true);
             isRunning = false;
+            LOG.debug("stopping information retrieval");
 
 //        Tạo phản hồi JSON
             JsonObject jsonResponse = Json.createObjectBuilder()
@@ -41,10 +51,32 @@ public class ToolManager {
                     .add("message", "TOOL HAS STOPPED")
                     .build();
             SocketHandleTaxCode.sendMessageToAll(jsonResponse.toString());
-        }
-//        executorService.shutdownNow();
 
+            informationRetrievalTask.cancel(false); // -> try change to false
+
+            if (program != null) {
+                program = null; // Hủy đối tượng Program
+            }
+        }
+        executorService.shutdownNow();
+        executorService = null;
+        LOG.debug("tool stopped: executorService = " + executorService);
     }
 
+    public static void stopTool(JsonObject jsonResponse) {
+        if (informationRetrievalTask != null) {
+            isRunning = false;
+            LOG.debug("stopping information retrieval 01");
+            SocketHandleTaxCode.sendMessageToAll(jsonResponse.toString());
 
+            informationRetrievalTask.cancel(false); // -> try change to false
+        }
+        executorService.shutdownNow();
+        executorService = null;
+
+        if (program != null) {
+            program = null; // Hủy đối tượng Program
+        }
+        LOG.debug("tool stopped 01: executorService = " + executorService);
+    }
 }

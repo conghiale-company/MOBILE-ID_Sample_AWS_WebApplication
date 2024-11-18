@@ -33,6 +33,8 @@ public class TaxCodeServlet_Backup extends HttpServlet {
     private Logger LOG = Logger.getLogger(TaxCodeServlet_Backup.class);
     private String message;
 
+    Program program;
+
     public void init() throws ServletException {
         super.init();
         executorService = Executors.newFixedThreadPool(1);
@@ -162,7 +164,8 @@ public class TaxCodeServlet_Backup extends HttpServlet {
                         }
 
                         LOG.debug("RUNNING...START");
-                        Program.running(args);
+                        program = new Program();
+                        program.running(args);
                     } catch (Exception e) {
                         running = false;
                         respPayload.setRunning(running);

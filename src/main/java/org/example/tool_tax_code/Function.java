@@ -2,7 +2,11 @@ package org.example.tool_tax_code;
 
 import org.apache.log4j.Logger;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.TreeMap;
 
 /**
@@ -112,6 +116,16 @@ public class Function {
                     TIMEOUT == -1 || CONTENT_TYPE_APP_JSON == null || CONTENT_TYPE_APP_JSON.isEmpty() ||
                     BASIC_TOKEN == null || BASIC_TOKEN.isEmpty()) {
                 LOG.debug("Invalid configuration parameter");
+
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                JsonObject jsonResponse = Json.createObjectBuilder()
+                        .add("status", "[ERROR] LOGIN_FAILED")
+                        .add("message", "INVALID CONFIGURATION PARAMETER [getAwsConfig]")
+                        .add("startDay", now.format(formatter))
+                        .add("endDay", now.format(formatter))
+                        .build();
+                ToolManager.stopTool(jsonResponse);
                 System.exit(0);
             } else
                 LOG.debug("Configuration parameters loaded successfully");

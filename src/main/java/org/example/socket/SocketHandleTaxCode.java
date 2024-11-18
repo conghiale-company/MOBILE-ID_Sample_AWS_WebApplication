@@ -1,6 +1,7 @@
 package org.example.socket;
 
 import org.apache.log4j.Logger;
+import org.example.tool_tax_code.Program;
 import org.example.tool_tax_code.ToolManager;
 
 import javax.json.Json;
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
 public class SocketHandleTaxCode {
     private static final Logger LOG = Logger.getLogger(SocketHandleTaxCode.class);
     private static final ConcurrentHashMap<String, Session> clients = new ConcurrentHashMap<>();
-    private static String lastMessage = "";
+    public static String lastMessage = "";
 
     @OnOpen
     public void onOpen(Session session) {
@@ -26,6 +27,19 @@ public class SocketHandleTaxCode {
         clients.put(session.getId(), session);
         if (lastMessage != null && !lastMessage.isEmpty())
             sendMessageToClient(session.getId(), lastMessage);
+
+//        if (ToolManager.program != null && ToolManager.isRunning) {
+//            if (lastMessage != null && !lastMessage.isEmpty())
+//                sendMessageToClient(session.getId(), lastMessage);
+//        }
+//        else {
+//            JsonObject jsonResponse = Json.createObjectBuilder()
+//                    .add("isRunning", false)
+////                    .add("status", "[STOP]")
+//                    .add("message", "TOOL HAS STOPPED")
+//                    .build();
+//            sendMessageToClient(session.getId(), jsonResponse.toString());
+//        }
     }
 
     @OnMessage
@@ -44,14 +58,6 @@ public class SocketHandleTaxCode {
         String configSendEmail = jsonObject.containsKey("config_send_email") ? jsonObject.getString("config_send_email") : null;
         String pathFileTaxCodes = jsonObject.containsKey("path_file_tax_codes") ? jsonObject.getString("path_file_tax_codes") : null;
 
-//        Logging each field
-//        LOG.debug("action: " + action);
-//        LOG.debug("index: " + index);
-//        LOG.debug("taxCode: " + taxCode);
-//        LOG.debug("configAws: " + configAws);
-//        LOG.debug("configSendEmail: " + configSendEmail);
-//        LOG.debug("pathFileTaxCodes: " + pathFileTaxCodes);
-
         String[] args;
 
         if (index != null && !index.equalsIgnoreCase("")) {
@@ -62,11 +68,11 @@ public class SocketHandleTaxCode {
             args = new String[] { configAws, configSendEmail, pathFileTaxCodes };
         }
 
-        if (action.equals("start")) {
-//            LOG.debug("[START] Client connected: " + session.getId());
+        LOG.debug("action: " + action);
+
+        if (action != null && action.equals("start")) {
             ToolManager.startTool(args);
-        } else if (action.equals("stop")) {
-//            LOG.debug("action: " + action);
+        } else if (action != null && action.equals("stop")) {
             ToolManager.stopTool();
         }
 
@@ -89,11 +95,11 @@ public class SocketHandleTaxCode {
 //    Phuong thuc gui tin nhan den tat ca client
     public static void sendMessageToAll(String message) {
 //        LOG.debug("clients: " + clients.values().size());
+        lastMessage = message;
         clients.values().forEach(session -> {
             LOG.debug("[SEND TO ALL] Client ID:" + session.getId());
             try {
                 session.getBasicRemote().sendText(message);
-                lastMessage = message;
                 LOG.debug("[SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + session.getId() + ": " + message);
             } catch (IOException e) {
                 LOG.debug("[ERROR] [SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + session.getId() + ": " + e);
@@ -104,11 +110,11 @@ public class SocketHandleTaxCode {
 
 //    Phuong thuc gui tin nhan den mot client cu the du tren sessionID
     public static void sendMessageToClient(String sessionId, String message) {
+        lastMessage = message;
         Session session = clients.get(sessionId);
         if (session != null) {
             try {
                 session.getBasicRemote().sendText(message);
-                lastMessage = message;
                 LOG.debug("[SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + sessionId + ": " + message);
             } catch (IOException e) {
                 LOG.debug("[ERROR] [SERVER SENT] SERVER SENT MESSAGE TO CLIENT " + sessionId + ": " + e.getMessage());
